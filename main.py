@@ -3,6 +3,7 @@ import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg # For embedding matplotlib plot in tkinter
+import mplfinance as mpf
 import tkinter as tk
 from tkinter import ttk
 
@@ -40,7 +41,12 @@ class MyApp:
         self.get_data_button.pack(pady=10)
 
     def get_symbol_data(self, sym):
-        sym_data = yf.download(sym, period="1mo", interval="1d")
+        sym_data = yf.download(sym, period="3mo", interval="1d")
+        sym_data.index.name = "Date"
+
+        # Clean data for mpfinance, we need single index not multi
+        if isinstance(sym_data.columns, pd.MultiIndex):
+            sym_data.columns = sym_data.columns.get_level_values(0)
 
         # Clear canvas if already exists
         if self.canvas:
@@ -48,7 +54,7 @@ class MyApp:
 
         # Create the plot
         fig, ax = plt.subplots(figsize=(7,5))
-        sym_data["Close"].plot(ax=ax)
+        mpf.plot(sym_data, type="candle", style="yahoo", ax=ax)
         ax.set_title(f"{sym.upper()} over 1 month")
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
