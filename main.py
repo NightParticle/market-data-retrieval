@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg # For embedding matplotlib plot in tkinter
 import tkinter as tk
 from tkinter import ttk
 
@@ -12,9 +13,13 @@ class MyApp:
         self.root = root
         self.root.title("Market Data")
         self.root.geometry("1000x600")
+        self.root.configure(bg="white")
 
         self.label = ttk.Label(self.root, text="Welcome")
         self.label.pack()
+
+        # This is a placeholder for the plot canvas
+        self.canvas = None
 
         self.create_widgets()
 
@@ -26,6 +31,7 @@ class MyApp:
         self.entry = ttk.Entry(self.root)
         self.entry.pack()
 
+        # Button used for getting and plotting a symbol
         self.get_data_button = ttk.Button(
             self.root, 
             text="Get data", 
@@ -33,14 +39,24 @@ class MyApp:
         )
         self.get_data_button.pack(pady=10)
 
-        # change this later
-        self.mean_label = ttk.Label(text="No Data")
-        self.mean_label.pack()
-
     def get_symbol_data(self, sym):
-        sym_data = yf.download(sym, period="1mo")
-        mean = np.mean(sym_data["Close"])
-        self.mean_label.config(text=f"Mean closing: {mean}")
+        sym_data = yf.download(sym, period="1mo", interval="1d")
+
+        # Clear canvas if already exists
+        if self.canvas:
+            self.canvas.get_tk_widget().destroy()
+
+        # Create the plot
+        fig, ax = plt.subplots(figsize=(7,5))
+        sym_data["Close"].plot(ax=ax)
+        ax.set_title(f"{sym.upper()} over 1 month")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Price (USD)")
+
+        # Embed the plot in tkinter
+        self.canvas = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas.draw()
+        self.canvas.get_tk_widget().pack(pady=10)
         
         
 
