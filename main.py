@@ -7,6 +7,7 @@ import mplfinance as mpf
 import tkinter as tk
 from tkinter import ttk
 
+from sma import SMA
 
 class MyApp:
     def __init__(self, root):
@@ -81,19 +82,20 @@ class MyApp:
 
     def add_sma_analysis(self, window):
         # Adds a SMA analysis to the ta list and updates plot
-        sma = self.data["Close"].rolling(window=window).mean()
-        self.ta.append(("SMA", sma))
-        self.create_plot()
+        sma = SMA(self.data["Close"], window)
+        self.ta.append(sma)
+        self.create_plot(False)
 
     def new_sym(self, sym):
         self.sym = sym
         self.ta = []
-        self.create_plot()
+        self.create_plot(True)
 
-    def create_plot(self):
-        self.data = yf.download(self.sym, period=self.period, interval=self.interval)
+    def create_plot(self, new_sym):
+        if new_sym:
+            self.data = yf.download(self.sym, period=self.period, interval=self.interval)
+        
         sym_data = self.data
-        sym_data.index.name = "Date"
 
         # Clean data for mpfinance, we need single index not multi
         if isinstance(sym_data.columns, pd.MultiIndex):
@@ -107,8 +109,9 @@ class MyApp:
 
         # Plot TA options
         for option in self.ta:
-            if option[0] == "SMA":
-                additional_plots.append(mpf.make_addplot(option[1]))
+            if isinstance(option, SMA):
+                window = option.window
+                additional_plots.append(mpf.make_addplot(option.sma, width=2, label=f"SMA {window}"))
 
         # Create the plot
         fig, ax = None, None
@@ -124,6 +127,7 @@ class MyApp:
                 title=f"{self.sym.upper()} over {self.period} (interval = {self.interval})",
                 ylabel="Price (USD)",
             )
+            ax[0].legend()
         else:
             fig, ax = mpf.plot(
                 sym_data,
