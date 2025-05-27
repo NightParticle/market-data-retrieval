@@ -62,7 +62,37 @@ class MyApp:
         )
         self.get_data_button.pack(pady=10)
 
+        # Additional symbol options
+        self.t_options_box = ttk.LabelFrame(self.t_box, text="Additional Options")
+        self.t_options_box.pack(side="left", expand=True, fill="both", padx=10)
+
+        self.t_period_label = ttk.Label(self.t_options_box, text="Period: ")
+        self.t_period_label.pack(side="left", padx=5)
+
+        # NOTE: Refactor this later!
+        period_ranges = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+        selected_period = tk.StringVar(value=period_ranges[3])
+
+        self.t_period_dropdown = ttk.OptionMenu(self.t_options_box, selected_period, *period_ranges, command=self.update_period)
+        self.t_period_dropdown.pack(side="left", padx=10)
+
+        # Interval dropdown
+        self.t_interval_label = ttk.Label(self.t_options_box, text="Interval: ")
+        self.t_interval_label.pack(side="left", padx=5)
+
+        interval_ranges = ["1h", "1d", "1wk", "1mo"]
+        selected_interval = tk.StringVar(value=interval_ranges[8])
+
+        self.t_interval_dropdown = ttk.OptionMenu(self.t_options_box, selected_interval, *interval_ranges, command=self.update_interval)
+        self.t_interval_dropdown.pack(side="left", padx=10)
+
         #self.create_plot()
+
+    def update_period(self, value):
+        self.period = value
+
+    def update_interval(self, value):
+        self.interval = value
 
     def create_sma_options(self, box):
         self.sma_box = ttk.LabelFrame(box, text="SMA Analysis", style="White.TLabel")
@@ -90,6 +120,7 @@ class MyApp:
     def new_sym(self, sym):
         self.sym = sym
         self.ta = []
+        print(f"P: {self.period} and I: {self.interval}")
         self.create_plot(True)
 
     def create_plot(self, new_sym):
