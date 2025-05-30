@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -6,6 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg # For embedding 
 import mplfinance as mpf
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 
 from sma import SMA
 
@@ -17,6 +20,9 @@ class MyApp:
         self.root.title("Market Data")
         self.root.geometry("1000x600")
         self.root.configure(bg="white")
+
+        # make sure everything cloeses correctly
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.label = ttk.Label(self.root, text="Welcome")
         self.label.pack()
@@ -31,6 +37,12 @@ class MyApp:
         self.ta = []
 
         self.create_widgets()
+
+    def on_close(self):
+        # close all processes
+        plt.close("all")
+        self.root.destroy()
+        sys.exit(0) # also exit python process 
 
     def create_widgets(self):
         # Container frame for all the options
@@ -81,7 +93,7 @@ class MyApp:
         self.t_interval_label.pack(side="left", padx=5)
 
         interval_ranges = ["1h", "1d", "1wk", "1mo"]
-        selected_interval = tk.StringVar(value=interval_ranges[8])
+        selected_interval = tk.StringVar(value=interval_ranges[0])
 
         self.t_interval_dropdown = ttk.OptionMenu(self.t_options_box, selected_interval, *interval_ranges, command=self.update_interval)
         self.t_interval_dropdown.pack(side="left", padx=10)
@@ -126,6 +138,11 @@ class MyApp:
     def create_plot(self, new_sym):
         if new_sym:
             self.data = yf.download(self.sym, period=self.period, interval=self.interval)
+
+        # cancel if there is no data
+        if self.data is None or self.data.empty:
+            messagebox.showerror("No Data for selected symbol with that range!")
+            return
         
         sym_data = self.data
 
